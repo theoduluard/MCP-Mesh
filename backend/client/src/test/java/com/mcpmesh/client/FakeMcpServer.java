@@ -25,28 +25,33 @@ public class FakeMcpServer {
             JsonNode idNode = request.get("id");
 
             if (idNode == null) {
-                continue; // notification (ex: notifications/initialized) -> pas de réponse
+                continue;
             }
 
             String method = request.get("method").asString();
             Map<String, JsonNode> params = extractParams(request.get("params"));
 
-            ObjectNode response = mapper.createObjectNode();
-            response.put("jsonrpc", "2.0");
-            response.set("id", idNode); // on renvoie le même id, tel quel
-
-            try {
-                JsonNode result = getResultForMethod(method, params, mapper);
-                response.set("result", result);
-            } catch (ToolNotFoundException e) {
-                ObjectNode error = mapper.createObjectNode();
-                error.put("code", e.getCode());
-                error.put("message", e.getMessage());
-                response.set("error", error);
-            }
-
-            out.println(mapper.writeValueAsString(response));
+            new Thread(() -> handleRequest(idNode, method, params, mapper, out)).start();
         }
+    }
+
+    private static void handleRequest(JsonNode idNode, String method, Map<String, JsonNode> params,
+                                        ObjectMapper mapper, PrintWriter out) {
+        ObjectNode response = mapper.createObjectNode();
+        response.put("jsonrpc", "2.0");
+        response.set("id", idNode);
+
+        try {
+            JsonNode result = getResultForMethod(method, params, mapper);
+            response.set("result", result);
+        } catch (ToolNotFoundException e) {
+            ObjectNode error = mapper.createObjectNode();
+            error.put("code", e.getCode());
+            error.put("message", e.getMessage());
+            response.set("error", error);
+        }
+
+        out.println(mapper.writeValueAsString(response));
     }
 
     private static JsonNode getResultForMethod(String method, Map<String, JsonNode> params, ObjectMapper mapper) {
@@ -95,6 +100,14 @@ public class FakeMcpServer {
             JsonNode arguments = params.get("arguments");
             String message = arguments.get("message").asString();
 
+            if ("slow".equals(message)) {
+                try {
+                    Thread.sleep(300); // simulate a slow server-side process
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
             ObjectNode textContent = mapper.createObjectNode();
             textContent.put("type", "text");
             textContent.put("text", message);
@@ -121,14 +134,13 @@ public class FakeMcpServer {
     }
 
     private static class ToolNotFoundException extends RuntimeException {
-        private final int code = -32602;
 
         ToolNotFoundException(String toolName) {
             super("Unknown tool: " + toolName);
         }
 
         int getCode() {
-            return code;
+            return -32602;
         }
     }
 }

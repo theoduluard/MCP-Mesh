@@ -127,8 +127,7 @@ gantt
     title Roadmap MCP Mesh
     section Phase 1 - Fondations
     Client JSON-RPC maison (stdio)      :p1a, 2026-07-14, 3d
-    Migration vers SDK MCP officiel     :p1b, after p1a, 3d
-    Endpoints REST + Angular minimal    :p1c, after p1b, 5d
+    Endpoints REST + Angular minimal    :p1c, after p1a, 5d
     section Phase 2 - Observabilité
     Migration logs vers time-series DB  :p2a, after p1c, 5d
     Dashboard latence / erreurs         :p2b, after p2a, 5d

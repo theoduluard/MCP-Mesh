@@ -94,8 +94,6 @@ public class McpClientTest {
         Awaitility.await().during(100, TimeUnit.MILLISECONDS);
         client.close();
 
-        // si close() n'annule pas activement la requête en attente, ce get() atteint son
-        // timeout AVANT le timeout interne de 10s de McpClient -> TimeoutException, pas ExecutionException
         assertThrows(ExecutionException.class, () -> pendingCall.get(2, TimeUnit.SECONDS));
     }
 

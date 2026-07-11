@@ -91,7 +91,7 @@ public class McpClientTest {
 
         CompletableFuture<JsonNode> pendingCall = CompletableFuture.supplyAsync(() -> callToolUnchecked("slow"));
 
-        Awaitility.await().during(100, TimeUnit.MILLISECONDS);
+        Thread.sleep(100);
         client.close();
 
         assertThrows(ExecutionException.class, () -> pendingCall.get(2, TimeUnit.SECONDS));

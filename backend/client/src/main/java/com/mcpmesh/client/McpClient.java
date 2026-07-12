@@ -28,9 +28,9 @@ public class McpClient {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
 
     private Process process;
-    private BufferedWriter stdin;
-    private BufferedReader stdout;
-    private BufferedReader stderr;
+    private BufferedWriter stdin = null;
+    private BufferedReader stdout = null;
+    private BufferedReader stderr = null;
     private final Object writeLock = new Object();
     private final AtomicInteger requestId = new AtomicInteger(0);
     private final Map<Integer, CompletableFuture<JsonNode>> pendingRequest = new ConcurrentHashMap<>();
@@ -121,21 +121,45 @@ public class McpClient {
     private void writeMessage(ObjectNode message) throws IOException {
         String json = mapper.writeValueAsString(message);
         synchronized (writeLock) {
+            if (stdin == null) {
+                throw new IOException("MCP Client closed");
+            }
             stdin.write(json);
             stdin.write("\n");
             stdin.flush();
         }
     }
 
-    public void close() throws IOException {
-        IOException closedException = new IOException("Client MCP fermé");
+    public void close() {
+        IOException closedException = new IOException("MCP Client closed");
         pendingRequest.values().forEach(f -> f.completeExceptionally(closedException));
         pendingRequest.clear();
-        stdin.close();
-        stdout.close();
-        stderr.close();
-        if (process != null) {
-            process.destroy();
+        if (stdin != null) {
+            synchronized(writeLock) {
+                try {
+                    stdin.close();
+                } catch (IOException e) {
+                    log.error("Cound not close stdin flux: {}", e.getMessage());
+                }
+                stdin = null;
+            }
         }
+        if (stdout != null) {
+            try {
+                stdout.close();
+            } catch (IOException e) {
+                log.error("Cound not close stdout flux: {}", e.getMessage());
+            }
+            stdout = null;
+        }
+        if (stderr != null) {
+            try {
+                stderr.close();
+            } catch (IOException e) {
+                log.error("Cound not close stderr flux: {}", e.getMessage());
+            }
+            stderr = null;
+        }
+        if (process != null) process.destroy();
     }
 }

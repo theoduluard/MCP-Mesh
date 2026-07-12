@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MCP Mesh.iml" filepath="$PROJECT_DIR$/MCP Mesh.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/orchestrator/backend.orchestrator.main.iml" filepath="$PROJECT_DIR$/.idea/modules/orchestrator/backend.orchestrator.main.iml" />
     </modules>
   </component>
 </project>

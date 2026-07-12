@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -94,6 +95,24 @@ public class McpClientTest {
         client.close();
 
         assertThrows(ExecutionException.class, () -> pendingCall.get(2, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void closeAfterFailedConnectDoesNotThrowTest() {
+        McpClient failedClient = new McpClient();
+        List<String> invalidCommand = List.of("this-command-does-not-exist-xyz");
+
+        assertThrows(IOException.class, () -> failedClient.connect(invalidCommand));
+        assertDoesNotThrow(failedClient::close);
+    }
+
+    @Test
+    public void sendAfterCloseThrowsClearErrorTest() throws Exception {
+        client.initialize();
+        client.close();
+
+        IOException exception = assertThrows(IOException.class, () -> client.listTools());
+        assertEquals("MCP Client closed", exception.getMessage());
     }
 
     private JsonNode callToolUnchecked(String message) {

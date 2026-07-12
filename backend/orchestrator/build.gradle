@@ -1,12 +1,12 @@
 plugins {
 	id 'java'
-	id 'java-test-fixtures'
 	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.mcpmesh'
 version = '0.0.1-SNAPSHOT'
+description = 'MCP Mesh orchestrator'
 
 java {
 	toolchain {
@@ -19,9 +19,11 @@ repositories {
 }
 
 dependencies {
+	implementation 'com.mcpmesh:client'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	testFixturesImplementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
+	testImplementation(testFixtures('com.mcpmesh:client'))
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

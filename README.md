@@ -141,6 +141,53 @@ gantt
     Mode replay                         :p4b, after p4a, 4d
     Intégration LLM (Claude API)        :p4c, after p4b, 5d
 ```
+
+## 7. Tester manuellement l'endpoint `/servers/connect`
+
+En attendant un test automatisé (`MockMvc`/`TestRestTemplate`), voici comment vérifier à la main que l'orchestrateur parle bien à un vrai serveur MCP via `McpClient`. On utilise `FakeMcpServer` (situé dans les sources de test de `client`) comme faux serveur MCP à connecter.
+
+**1. Compiler `client`** (pour avoir les `.class` de `FakeMcpServer`, y compris ses sources de test) :
+```bash
+cd backend/client
+./gradlew compileTestJava
+```
+
+**2. Construire le classpath de `FakeMcpServer`** — il a besoin des classes compilées de `client` (main + test) et des jars Jackson (`tools.jackson`) :
+```bash
+JACKSON_DATABIND=$(find ~/.gradle/caches -iname "jackson-databind-3*.jar" | grep -v sources | grep -v javadoc | head -1)
+JACKSON_CORE=$(find ~/.gradle/caches -iname "jackson-core-3*.jar" | grep -v sources | grep -v javadoc | head -1)
+JACKSON_ANNOT=$(find ~/.gradle/caches -iname "jackson-annotations-2*.jar" | grep -v sources | grep -v javadoc | head -1)
+CP="backend/client/build/classes/java/test:backend/client/build/classes/java/main:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANNOT"
+```
+
+**3. Démarrer l'orchestrateur** (depuis `backend/orchestrator`) :
+```bash
+cd backend/orchestrator
+./gradlew bootRun
+```
+
+**4. Appeler l'endpoint**, dans un autre terminal — la commande à connecter est celle qui lance `FakeMcpServer` avec le classpath construit à l'étape 2 :
+```bash
+curl -X POST http://localhost:8080/servers/connect \
+  -H "Content-Type: application/json" \
+  -d "{\"command\": [\"java\", \"-cp\", \"$CP\", \"com.mcpmesh.client.FakeMcpServer\"]}"
+```
+
+**Résultat attendu (succès)** — `200 OK` :
+```json
+{"result":{"protocolVersion":"2024-11-05","capabilities":{},"serverInfo":{"name":"fake-mcp-server","version":"0.0.1"}}}
+```
+
+**Vérifier aussi le chemin d'erreur**, avec une commande invalide — `400 Bad Request` attendu :
+```bash
+curl -X POST http://localhost:8080/servers/connect \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["this-command-does-not-exist"]}'
+```
+```json
+{"message":"Cannot run program \"this-command-does-not-exist\": ..."}
+```
+
 # Contribution
 
 Aucune contribution n'est attendue sur ce projet.

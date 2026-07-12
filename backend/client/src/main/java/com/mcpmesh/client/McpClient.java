@@ -139,7 +139,7 @@ public class McpClient {
                 try {
                     stdin.close();
                 } catch (IOException e) {
-                    log.error("Cound not close stdin flux: {}", e.getMessage());
+                    log.error("Could not close stdin flux: {}", e.getMessage());
                 }
                 stdin = null;
             }
@@ -148,7 +148,7 @@ public class McpClient {
             try {
                 stdout.close();
             } catch (IOException e) {
-                log.error("Cound not close stdout flux: {}", e.getMessage());
+                log.error("Could not close stdout flux: {}", e.getMessage());
             }
             stdout = null;
         }
@@ -156,7 +156,7 @@ public class McpClient {
             try {
                 stderr.close();
             } catch (IOException e) {
-                log.error("Cound not close stderr flux: {}", e.getMessage());
+                log.error("Could not close stderr flux: {}", e.getMessage());
             }
             stderr = null;
         }

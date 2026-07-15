@@ -36,6 +36,7 @@ class McpServerControllerTest {
         ConnectServerRequest request = new ConnectServerRequest(command);
 
         ConnectServerResponse response = restTemplate.postForObject("/servers/connect", request, ConnectServerResponse.class);
+        assertNotNull(response);
         connectedServerIds.add(response.serverId());
         return response;
     }

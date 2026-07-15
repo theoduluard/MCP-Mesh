@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -61,5 +62,9 @@ public class McpServerService {
         }
         client.close();
         registry.removeClient(serverId);
+    }
+
+    public Set<String> listServers() {
+        return registry.getAllServerIds();
     }
 }

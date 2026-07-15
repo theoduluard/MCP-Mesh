@@ -3,6 +3,7 @@ package com.mcpmesh.orchestrator.controller;
 import com.mcpmesh.client.FakeMcpServer;
 import com.mcpmesh.orchestrator.dto.*;
 import com.mcpmesh.orchestrator.exception.ErrorResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -25,13 +27,25 @@ class McpServerControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    private final List<String> connectedServerIds = new ArrayList<>();
+
     private ConnectServerResponse connectToFakeServer() {
         List<String> command = List.of(
                 "java", "-cp", System.getProperty("java.class.path"), FakeMcpServer.class.getName()
         );
         ConnectServerRequest request = new ConnectServerRequest(command);
 
-        return restTemplate.postForObject("/servers/connect", request, ConnectServerResponse.class);
+        ConnectServerResponse response = restTemplate.postForObject("/servers/connect", request, ConnectServerResponse.class);
+        connectedServerIds.add(response.serverId());
+        return response;
+    }
+
+    @AfterEach
+    void tearDown() {
+        for (String serverId : connectedServerIds) {
+            restTemplate.exchange("/servers/" + serverId, HttpMethod.DELETE, null, Void.class);
+        }
+        connectedServerIds.clear();
     }
 
     @Test
@@ -82,5 +96,15 @@ class McpServerControllerTest {
 
         ResponseEntity<ErrorResponse> afterDisconnect = restTemplate.getForEntity("/servers/" + serverId + "/tools", ErrorResponse.class);
         assertEquals(HttpStatus.NOT_FOUND, afterDisconnect.getStatusCode());
+    }
+
+    @Test
+    void listServersTest() {
+        String serverId = connectToFakeServer().serverId();
+
+        ServerListResponse response = restTemplate.getForObject("/servers", ServerListResponse.class);
+        assertNotNull(response);
+        assertEquals(1, response.serverIds().size());
+        assertEquals(serverId, response.serverIds().toArray()[0]);
     }
 }

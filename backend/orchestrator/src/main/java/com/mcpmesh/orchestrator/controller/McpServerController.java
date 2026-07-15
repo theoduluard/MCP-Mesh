@@ -36,4 +36,9 @@ public class McpServerController {
     public void disconnect(@PathVariable String serverId) {
         service.disconnect(serverId);
     }
+
+    @GetMapping
+    public ServerListResponse listServers() {
+        return new ServerListResponse(service.listServers());
+    }
 }
